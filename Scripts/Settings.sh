@@ -60,11 +60,6 @@ if [[ "${WRT_TARGET^^}" == *"QUALCOMMAX"* ]]; then
 	else
 		echo "CONFIG_NSS_FIRMWARE_VERSION_11_4=y" >> ./.config
 	fi
-	#无WIFI配置调整Q6大小
-	if [[ "${WRT_CONFIG,,}" == *"wifi"* && "${WRT_CONFIG,,}" == *"no"* ]]; then
-		find $DTS_PATH -type f ! -iname '*nowifi*' -exec sed -i 's/ipq\(6018\|8074\).dtsi/ipq\1-nowifi.dtsi/g' {} +
-		echo "qualcommax set up nowifi successfully!"
-	fi
 	#其他调整
 	echo "CONFIG_PACKAGE_kmod-usb-serial-qualcomm=y" >> ./.config
 fi
