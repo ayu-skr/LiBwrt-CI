@@ -130,3 +130,4 @@ UPDATE_VERSION "sing-box"
 if [ -f "$GITHUB_WORKSPACE/Scripts/PRIVATE.sh" ]; then
 	source "$GITHUB_WORKSPACE/Scripts/PRIVATE.sh"
 fi
+bash "$GITHUB_WORKSPACE/Scripts/Znm2Dashboard.sh"
