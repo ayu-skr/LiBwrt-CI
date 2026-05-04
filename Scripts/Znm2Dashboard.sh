@@ -843,14 +843,23 @@ EOF
 cat > ./custom/luci-app-znm2-dashboard/root/etc/uci-defaults/99-znm2-dashboard <<'EOF'
 #!/bin/sh
 
+# 设置 LuCI 默认中文
 uci -q set luci.main.lang='zh_cn'
 uci -q set luci.languages.zh_cn='简体中文'
 uci -q set luci.languages.en='English'
+
+# 设置 Aurora 为默认主题
 uci -q set luci.main.mediaurlbase='/luci-static/aurora'
+
+# 提交 LuCI 配置
 uci -q commit luci
 
+# 清理 LuCI 缓存，确保新首页、中文和主题立即生效
 rm -rf /tmp/luci-indexcache
 rm -rf /tmp/luci-modulecache
+
+# 重启 Web 服务，让 LuCI 重新加载菜单缓存
+/etc/init.d/uhttpd restart >/dev/null 2>&1 || true
 
 exit 0
 EOF
