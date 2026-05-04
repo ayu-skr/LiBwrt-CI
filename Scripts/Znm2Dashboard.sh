@@ -33,7 +33,14 @@ local sys  = require "luci.sys"
 local json = require "luci.jsonc"
 
 function index()
-    entry({"admin", "status", "znm2_dashboard"}, template("znm2_dashboard"), _("首页仪表盘"), 1).dependent = true
+    -- 把“状态”菜单默认页改成首页仪表盘
+    -- 登录后 LuCI 默认进入 /admin/status 时，会自动跳到这个仪表盘
+    entry({"admin", "status"}, alias("admin", "status", "znm2_dashboard"), _("状态"), 1).index = true
+
+    -- 状态菜单里的首页入口
+    entry({"admin", "status", "znm2_dashboard"}, template("znm2_dashboard"), _("首页"), 0).dependent = false
+
+    -- 仪表盘数据接口
     entry({"admin", "status", "znm2_dashboard_data"}, call("action_data")).leaf = true
 end
 
@@ -839,6 +846,7 @@ cat > ./custom/luci-app-znm2-dashboard/root/etc/uci-defaults/99-znm2-dashboard <
 uci -q set luci.main.lang='zh_cn'
 uci -q set luci.languages.zh_cn='简体中文'
 uci -q set luci.languages.en='English'
+uci -q set luci.main.mediaurlbase='/luci-static/aurora'
 uci -q commit luci
 
 rm -rf /tmp/luci-indexcache
