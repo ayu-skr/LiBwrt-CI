@@ -38,4 +38,5 @@ CONFIG_PACKAGE_luci-app-passwall=y
 CONFIG_PACKAGE_passwall=y
 #CONFIG_PACKAGE_luci-app-microsocks=y
 #CONFIG_PACKAGE_microsocks=y
-CONFIG_PACKAGE_luci-app-znm2-dashboard=y
+#CONFIG_PACKAGE_luci-app-znm2-dashboard=y
+CONFIG_PACKAGE_luci-theme-znm2-neon=y
