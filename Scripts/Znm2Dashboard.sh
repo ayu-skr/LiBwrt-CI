@@ -5,6 +5,7 @@ echo "==== Create luci-app-znm2-dashboard ===="
 
 # WRT-CORE.yml 会在 ./wrt/package/ 目录下执行 Scripts/Packages.sh
 # 所以这里的 ./custom 实际就是 ./wrt/package/custom
+rm -rf ./custom/luci-app-znm2-dashboard
 mkdir -p ./custom/luci-app-znm2-dashboard/luasrc/controller
 mkdir -p ./custom/luci-app-znm2-dashboard/luasrc/view
 mkdir -p ./custom/luci-app-znm2-dashboard/root/etc/uci-defaults
@@ -13,7 +14,7 @@ cat > ./custom/luci-app-znm2-dashboard/Makefile <<'EOF'
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-znm2-dashboard
-PKG_VERSION:=1.0
+PKG_VERSION:=1.1
 PKG_RELEASE:=1
 
 LUCI_TITLE:=ZN M2 iStoreOS Style Dashboard
@@ -30,18 +31,16 @@ module("luci.controller.znm2_dashboard", package.seeall)
 
 local http = require "luci.http"
 local sys  = require "luci.sys"
-local json = require "luci.jsonc"
 
 function index()
-    -- 把“状态”菜单默认页改成首页仪表盘
-    -- 登录后 LuCI 默认进入 /admin/status 时，会自动跳到这个仪表盘
+    -- 把状态页默认入口指向仪表盘
     entry({"admin", "status"}, alias("admin", "status", "znm2_dashboard"), _("状态"), 1).index = true
 
-    -- 状态菜单里的首页入口
+    -- 仪表盘页面
     entry({"admin", "status", "znm2_dashboard"}, template("znm2_dashboard"), _("首页"), 0).dependent = false
 
-    -- 仪表盘数据接口
-    entry({"admin", "status", "znm2_dashboard_data"}, call("action_data")).leaf = true
+    -- 数据接口：/cgi-bin/luci/admin/status/znm2_dashboard/data
+    entry({"admin", "status", "znm2_dashboard", "data"}, call("action_data")).leaf = true
 end
 
 local function trim(s)
@@ -56,14 +55,30 @@ local function readfile(path)
     return trim(data)
 end
 
+local function json_escape(s)
+    s = tostring(s or "")
+    s = s:gsub("\\", "\\\\")
+    s = s:gsub('"', '\\"')
+    s = s:gsub("\n", "\\n")
+    s = s:gsub("\r", "\\r")
+    return s
+end
+
+local function json_bool(v)
+    return v and "true" or "false"
+end
+
 local function get_cpu_temp()
-    for _, p in ipairs({
+    local paths = {
         "/sys/class/thermal/thermal_zone0/temp",
         "/sys/class/thermal/thermal_zone1/temp",
         "/sys/class/thermal/thermal_zone2/temp",
         "/sys/class/hwmon/hwmon0/temp1_input",
-        "/sys/class/hwmon/hwmon1/temp1_input"
-    }) do
+        "/sys/class/hwmon/hwmon1/temp1_input",
+        "/sys/class/hwmon/hwmon2/temp1_input"
+    }
+
+    for _, p in ipairs(paths) do
         local v = readfile(p)
         local n = tonumber(v)
         if n then
@@ -74,6 +89,18 @@ local function get_cpu_temp()
             end
         end
     end
+
+    local v = trim(sys.exec("for f in /sys/class/thermal/thermal_zone*/temp /sys/class/hwmon/hwmon*/temp*_input; do [ -f \"$f\" ] && cat \"$f\" && break; done 2>/dev/null"))
+    local n = tonumber(v)
+
+    if n then
+        if n > 1000 then
+            return string.format("%.1f", n / 1000)
+        else
+            return string.format("%.1f", n)
+        end
+    end
+
     return "--"
 end
 
@@ -93,13 +120,9 @@ local function get_uptime()
 end
 
 local function get_load()
-    local l = readfile("/proc/loadavg") or "0 0 0"
+    local l = readfile("/proc/loadavg") or "0.00 0.00 0.00"
     local a, b, c = l:match("^(%S+)%s+(%S+)%s+(%S+)")
-    return {
-        one = a or "0.00",
-        five = b or "0.00",
-        fifteen = c or "0.00"
-    }
+    return a or "0.00", b or "0.00", c or "0.00"
 end
 
 local function get_mem()
@@ -144,14 +167,30 @@ local function get_model()
     return "ZN M2"
 end
 
+local function get_hostname()
+    local h = trim(sys.exec("uci -q get system.@system[0].hostname"))
+    if h ~= "" then return h end
+
+    h = readfile("/proc/sys/kernel/hostname")
+    if h and h ~= "" then return h end
+
+    return "LiBwrt"
+end
+
 local function get_firmware()
     local release = readfile("/etc/openwrt_release") or ""
     local desc = release:match("DISTRIB_DESCRIPTION='([^']+)'")
-    return desc or "LiBwrt / OpenWrt"
+    if desc and desc ~= "" then return desc end
+
+    local ver = trim(sys.exec("cat /etc/banner 2>/dev/null | head -n 1"))
+    if ver ~= "" then return ver end
+
+    return "LiBwrt / OpenWrt"
 end
 
 local function get_kernel()
-    return trim(sys.exec("uname -r"))
+    local k = trim(sys.exec("uname -r 2>/dev/null"))
+    return k ~= "" and k or "--"
 end
 
 local function get_lan_ip()
@@ -164,6 +203,12 @@ end
 
 local function get_wan_ip()
     local ip = trim(sys.exec("ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i==\"src\") print $(i+1)}' | head -n1"))
+    if ip == "" then
+        ip = trim(sys.exec("ip -4 addr show pppoe-wan 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1"))
+    end
+    if ip == "" then
+        ip = trim(sys.exec("ip -4 addr show wan 2>/dev/null | awk '/inet / {print $2}' | cut -d/ -f1 | head -n1"))
+    end
     return ip ~= "" and ip or "--"
 end
 
@@ -173,16 +218,13 @@ local function get_gateway()
 end
 
 local function get_dns()
-    local dns = trim(sys.exec("awk '/^nameserver/ {print $2}' /tmp/resolv.conf.d/resolv.conf.auto /etc/resolv.conf 2>/dev/null | sort -u | head -n 3 | paste -sd ',' -"))
+    local dns = trim(sys.exec("awk '/^nameserver/ {print $2}' /tmp/resolv.conf.d/resolv.conf.auto /tmp/resolv.conf.auto /etc/resolv.conf 2>/dev/null | sort -u | head -n 3 | paste -sd ',' -"))
     return dns ~= "" and dns or "--"
 end
 
 local function service_status(name)
     local running = sys.call("/etc/init.d/" .. name .. " running >/dev/null 2>&1")
-    return {
-        name = name,
-        running = running == 0
-    }
+    return running == 0
 end
 
 local function get_net_bytes()
@@ -192,50 +234,130 @@ local function get_net_bytes()
     local rx = tonumber(readfile("/sys/class/net/" .. dev .. "/statistics/rx_bytes")) or 0
     local tx = tonumber(readfile("/sys/class/net/" .. dev .. "/statistics/tx_bytes")) or 0
 
-    return {
-        dev = dev,
-        rx = rx,
-        tx = tx
-    }
+    return dev, rx, tx
 end
 
-local function get_cpu_usage_simple()
-    local l = get_load()
-    local load = tonumber(l.one) or 0
-    local cores = tonumber(trim(sys.exec("grep -c '^processor' /proc/cpuinfo 2>/dev/null"))) or 4
-    local p = math.floor((load / cores) * 100)
-    if p < 0 then p = 0 end
-    if p > 100 then p = 100 end
-    return p
+local function get_cpu_usage()
+    local l1 = readfile("/proc/stat") or ""
+    local u1, n1, s1, i1, w1, irq1, sirq1 = l1:match("cpu%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")
+
+    u1 = tonumber(u1) or 0
+    n1 = tonumber(n1) or 0
+    s1 = tonumber(s1) or 0
+    i1 = tonumber(i1) or 0
+    w1 = tonumber(w1) or 0
+    irq1 = tonumber(irq1) or 0
+    sirq1 = tonumber(sirq1) or 0
+
+    sys.call("sleep 1 >/dev/null 2>&1")
+
+    local l2 = readfile("/proc/stat") or ""
+    local u2, n2, s2, i2, w2, irq2, sirq2 = l2:match("cpu%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")
+
+    u2 = tonumber(u2) or 0
+    n2 = tonumber(n2) or 0
+    s2 = tonumber(s2) or 0
+    i2 = tonumber(i2) or 0
+    w2 = tonumber(w2) or 0
+    irq2 = tonumber(irq2) or 0
+    sirq2 = tonumber(sirq2) or 0
+
+    local idle1 = i1 + w1
+    local idle2 = i2 + w2
+
+    local total1 = u1 + n1 + s1 + i1 + w1 + irq1 + sirq1
+    local total2 = u2 + n2 + s2 + i2 + w2 + irq2 + sirq2
+
+    local totald = total2 - total1
+    local idled = idle2 - idle1
+
+    if totald <= 0 then return 0 end
+
+    local usage = math.floor(((totald - idled) / totald) * 100)
+    if usage < 0 then usage = 0 end
+    if usage > 100 then usage = 100 end
+
+    return usage
 end
 
 function action_data()
-    local data = {
-        hostname = trim(sys.hostname() or "LiBwrt"),
-        model = get_model(),
-        firmware = get_firmware(),
-        kernel = get_kernel(),
-        uptime = get_uptime(),
-        temp = get_cpu_temp(),
-        cpu = get_cpu_usage_simple(),
-        load = get_load(),
-        mem = get_mem(),
-        rootfs = get_rootfs(),
-        lan_ip = get_lan_ip(),
-        wan_ip = get_wan_ip(),
-        gateway = get_gateway(),
-        dns = get_dns(),
-        net = get_net_bytes(),
-        services = {
-            service_status("passwall"),
-            service_status("mosdns"),
-            service_status("lucky"),
-            service_status("gecoosac")
-        }
-    }
+    local load1, load5, load15 = get_load()
+    local mem = get_mem()
+    local rootfs = get_rootfs()
+    local dev, rx, tx = get_net_bytes()
+
+    local json = string.format([[
+{
+  "hostname": "%s",
+  "model": "%s",
+  "firmware": "%s",
+  "kernel": "%s",
+  "uptime": "%s",
+  "temp": "%s",
+  "cpu": %d,
+  "load": {
+    "one": "%s",
+    "five": "%s",
+    "fifteen": "%s"
+  },
+  "mem": {
+    "used": "%s",
+    "total": "%s",
+    "percent": %d
+  },
+  "rootfs": {
+    "used": "%s",
+    "total": "%s",
+    "percent": "%s"
+  },
+  "lan_ip": "%s",
+  "wan_ip": "%s",
+  "gateway": "%s",
+  "dns": "%s",
+  "net": {
+    "dev": "%s",
+    "rx": %d,
+    "tx": %d
+  },
+  "services": [
+    {"name": "passwall", "running": %s},
+    {"name": "mosdns", "running": %s},
+    {"name": "lucky", "running": %s},
+    {"name": "gecoosac", "running": %s}
+  ]
+}
+]],
+        json_escape(get_hostname()),
+        json_escape(get_model()),
+        json_escape(get_firmware()),
+        json_escape(get_kernel()),
+        json_escape(get_uptime()),
+        json_escape(get_cpu_temp()),
+        get_cpu_usage(),
+        json_escape(load1),
+        json_escape(load5),
+        json_escape(load15),
+        json_escape(mem.used),
+        json_escape(mem.total),
+        mem.percent,
+        json_escape(rootfs.used),
+        json_escape(rootfs.total),
+        json_escape(rootfs.percent),
+        json_escape(get_lan_ip()),
+        json_escape(get_wan_ip()),
+        json_escape(get_gateway()),
+        json_escape(get_dns()),
+        json_escape(dev),
+        rx,
+        tx,
+        json_bool(service_status("passwall")),
+        json_bool(service_status("mosdns")),
+        json_bool(service_status("lucky")),
+        json_bool(service_status("gecoosac"))
+    )
 
     http.prepare_content("application/json")
-    http.write(json.stringify(data))
+    http.write(json)
 end
 EOF
 
@@ -596,7 +718,7 @@ body {
             <div class="metric">
                 <div>
                     <div class="num"><span id="cpu">--</span>%</div>
-                    <div class="sub">基于系统负载估算</div>
+                    <div class="sub">实时 CPU 占用</div>
                 </div>
                 <div class="iconbox blue">⚙</div>
             </div>
@@ -782,11 +904,16 @@ function updateSpeed(net) {
 }
 
 function refreshData() {
-    fetch("<%=url('admin/status/znm2_dashboard_data')%>", {
+    fetch("<%=url('admin/status/znm2_dashboard/data')%>", {
         cache: "no-store",
         credentials: "same-origin"
     })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+        if (!r.ok) {
+            throw new Error("HTTP " + r.status);
+        }
+        return r.json();
+    })
     .then(function(d) {
         setText("hostname", d.hostname || "--");
         setText("model", d.model || "--");
@@ -843,22 +970,15 @@ EOF
 cat > ./custom/luci-app-znm2-dashboard/root/etc/uci-defaults/99-znm2-dashboard <<'EOF'
 #!/bin/sh
 
-# 设置 LuCI 默认中文
 uci -q set luci.main.lang='zh_cn'
 uci -q set luci.languages.zh_cn='简体中文'
 uci -q set luci.languages.en='English'
-
-# 设置 Aurora 为默认主题
 uci -q set luci.main.mediaurlbase='/luci-static/aurora'
-
-# 提交 LuCI 配置
 uci -q commit luci
 
-# 清理 LuCI 缓存，确保新首页、中文和主题立即生效
 rm -rf /tmp/luci-indexcache
 rm -rf /tmp/luci-modulecache
 
-# 重启 Web 服务，让 LuCI 重新加载菜单缓存
 /etc/init.d/uhttpd restart >/dev/null 2>&1 || true
 
 exit 0
