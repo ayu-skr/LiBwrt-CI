@@ -39,9 +39,11 @@ on:
       WRT_PACKAGE:
         required: false
         type: string
+        default: ""
       WRT_TEST:
         required: false
         type: string
+        default: "false"
 
 permissions:
   contents: write
@@ -69,47 +71,49 @@ jobs:
 
     steps:
       - name: Checkout Projects
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
 
       - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo -E apt -yqq purge firefox || true
-          sudo -E apt -yqq update
-          sudo -E apt -yqq full-upgrade
-          sudo -E apt -yqq autoremove --purge
-          sudo -E apt -yqq autoclean
-          sudo -E apt -yqq clean
-          sudo -E apt -yqq install dos2unix libfuse-dev
+          sudo -E apt-get -yqq update
+          sudo -E apt-get -yqq install dos2unix libfuse-dev curl wget git jq
 
           sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
 
-          sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
           sudo mkdir -p /mnt/build_wrt
-          sudo chown $USER:$USER /mnt/build_wrt
+          sudo chown "$USER:$USER" /mnt/build_wrt
 
           rm -rf "$GITHUB_WORKSPACE/wrt"
           sudo ln -s /mnt/build_wrt "$GITHUB_WORKSPACE/wrt"
 
       - name: Initialization Values
         run: |
-          echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
-          echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> $GITHUB_ENV
-          echo "WRT_INFO=${WRT_SOURCE%%/*}" >> $GITHUB_ENV
-          echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt)" >> $GITHUB_ENV
-          echo "WRT_WIFI=wifi-yes" >> $GITHUB_ENV
-          echo "WRT_KVER=none" >> $GITHUB_ENV
-          echo "WRT_LIST=none" >> $GITHUB_ENV
+          echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> "$GITHUB_ENV"
+          echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> "$GITHUB_ENV"
+          echo "WRT_INFO=${WRT_SOURCE%%/*}" >> "$GITHUB_ENV"
+
+          if [ -f "./Config/$WRT_CONFIG.txt" ]; then
+            TARGET_NAME="$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' "./Config/$WRT_CONFIG.txt" || true)"
+            echo "WRT_TARGET=${TARGET_NAME:-unknown}" >> "$GITHUB_ENV"
+          else
+            echo "WRT_TARGET=unknown" >> "$GITHUB_ENV"
+          fi
+
+          echo "WRT_WIFI=wifi-yes" >> "$GITHUB_ENV"
+          echo "WRT_KVER=none" >> "$GITHUB_ENV"
+          echo "WRT_LIST=none" >> "$GITHUB_ENV"
 
       - name: Clone Code
         run: |
+          echo "==== Clone OpenWrt Source ===="
           git clone --depth=1 --single-branch --branch "$WRT_BRANCH" "$WRT_REPO" ./wrt/
 
           cd ./wrt/
-          echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> "$GITHUB_ENV"
 
           PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
           if [ -f "$PROJECT_MIRRORS_FILE" ]; then
@@ -118,13 +122,14 @@ jobs:
 
       - name: Check Scripts
         run: |
-          find ./ -maxdepth 4 -type f -iregex ".*\(txt\|sh\|json\|css\|js\|htm\|lua\)$" -exec dos2unix {} \; || true
-          find ./ -maxdepth 4 -type f -iregex ".*\(sh\)$" -exec chmod +x {} \; || true
+          echo "==== Convert scripts to Unix format ===="
+          find ./ -maxdepth 5 -type f -iregex ".*\(txt\|sh\|json\|css\|js\|htm\|lua\)$" -exec dos2unix {} \; || true
+          find ./ -maxdepth 5 -type f -iregex ".*\(sh\)$" -exec chmod +x {} \; || true
 
       - name: Check Caches
         id: check-cache
         if: env.WRT_TEST != 'true'
-        uses: actions/cache@main
+        uses: actions/cache@v4
         with:
           key: ${{ env.WRT_CONFIG }}-${{ env.WRT_INFO }}-${{ env.WRT_HASH }}
           restore-keys: |
@@ -137,6 +142,7 @@ jobs:
       - name: Update Caches
         if: env.WRT_TEST != 'true'
         run: |
+          echo "==== Update caches ===="
           if [ -d "./wrt/staging_dir" ]; then
             find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
               find "$DIR" -type f -exec touch {} +
@@ -144,7 +150,7 @@ jobs:
 
             mkdir -p ./wrt/tmp
             echo "1" > ./wrt/tmp/.build
-            echo "toolchain skiped done!"
+            echo "toolchain skipped done!"
           else
             echo "caches missed!"
           fi
@@ -190,6 +196,8 @@ jobs:
           }
           MENUJSON
 
+          sed -i 's/^          //' "$GITHUB_WORKSPACE/wrt/files/usr/share/luci/menu.d/m2-aurora-home.json"
+
           echo "==== Create M2 Aurora default home script ===="
           mkdir -p "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults"
 
@@ -232,6 +240,8 @@ jobs:
           }
           INNERMENUJSON
 
+          sed -i 's/^          //' "$MENU_DIR/m2-aurora-home.json"
+
           if [ -f "$BASE_JSON" ]; then
               sed -i 's#admin/status/overview#admin/status/m2aurora#g' "$BASE_JSON"
           fi
@@ -240,6 +250,8 @@ jobs:
 
           exit 0
           UCIDEFAULT
+
+          sed -i 's/^          //' "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home"
 
           chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home"
           chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/"* 2>/dev/null || true
@@ -264,8 +276,14 @@ jobs:
       - name: Custom Packages
         run: |
           cd ./wrt/package/
-          "$GITHUB_WORKSPACE/Scripts/Packages.sh"
-          "$GITHUB_WORKSPACE/Scripts/Handles.sh"
+
+          if [ -f "$GITHUB_WORKSPACE/Scripts/Packages.sh" ]; then
+            "$GITHUB_WORKSPACE/Scripts/Packages.sh"
+          fi
+
+          if [ -f "$GITHUB_WORKSPACE/Scripts/Handles.sh" ]; then
+            "$GITHUB_WORKSPACE/Scripts/Handles.sh"
+          fi
 
       - name: Custom Settings
         run: |
@@ -277,7 +295,9 @@ jobs:
             cat "$GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt" "$GITHUB_WORKSPACE/Config/GENERAL.txt" >> .config
           fi
 
-          "$GITHUB_WORKSPACE/Scripts/Settings.sh"
+          if [ -f "$GITHUB_WORKSPACE/Scripts/Settings.sh" ]; then
+            "$GITHUB_WORKSPACE/Scripts/Settings.sh"
+          fi
 
           echo "==== Ensure LuCI Aurora dashboard requirements ===="
           {
@@ -330,12 +350,15 @@ jobs:
           cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_DATE".txt
 
           if [[ "$WRT_TEST" != 'true' ]]; then
-            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \; | head -n1)" >> $GITHUB_ENV
-            echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
+            KVER="$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \; | head -n1 || true)"
+            LIST="$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ' || true)"
 
-            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
+            echo "WRT_KVER=${KVER:-none}" >> "$GITHUB_ENV"
+            echo "WRT_LIST=${LIST:-none}" >> "$GITHUB_ENV"
 
-            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*"); do
+            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} + || true
+
+            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*" || true); do
               EXT=$(basename "$FILE" | cut -d '.' -f 2-)
               NAME=$(basename "$FILE" | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*" || true)
 
@@ -350,15 +373,14 @@ jobs:
           fi
 
       - name: Release Firmware
-        uses: softprops/action-gh-release@master
+        if: always()
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.WRT_CONFIG }}-${{ env.WRT_INFO }}-${{ env.WRT_BRANCH }}-${{ env.WRT_DATE }}
           files: ./wrt/upload/*.*
           body: |
             这是个平台固件包，内含多个设备！
             请注意选择你需要的设备固件！
-            不要问，刷就完事了！
-            全系带开源硬件加速，别问了！
 
             源码：${{ env.WRT_REPO }}
             分支：${{ env.WRT_BRANCH }}
