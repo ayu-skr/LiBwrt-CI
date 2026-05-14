@@ -1,0 +1,193 @@
+<%+header%>
+
+<link rel="stylesheet" href="/luci-static/m2more/common.css?v=20260514">
+<link rel="stylesheet" href="/luci-static/m2more/aurora.css?v=20260514">
+
+<div class="m2more aurora">
+    <section class="hero">
+        <div class="hero-left">
+
+
+            <div class="znm2-stage">
+                <h1 class="znm2-animated" id="znm2_animated">
+                    <span class="znm2-letter" data-i="0">Z</span>
+                    <span class="znm2-letter" data-i="1">N</span>
+                    <span class="znm2-gap"></span>
+                    <span class="znm2-letter" data-i="2">M</span>
+                    <span class="znm2-letter" data-i="3">2</span>
+                </h1>
+            </div>
+
+            <div class="latency-single show latency-under-title">
+                <span id="latency_name" class="latency-site">Google</span>
+                <span class="latency-label">延迟</span>
+                <b id="latency_value" class="latency-ms">--</b>
+            </div>
+        </div>
+
+
+        <div class="github-monitor-box">
+            <div class="github-monitor-head">
+                <strong>GitHub 编译监控</strong>
+                <span id="github_monitor_status">今日</span>
+            </div>
+
+            <div class="github-monitor-input">
+                <input id="github_repo_input" type="text" />
+                <button id="github_add_repo_btn" type="button">添加</button>
+            </div>
+
+            <div class="github-monitor-table-wrap">
+                <table class="github-monitor-table">
+                    <thead>
+                        <tr>
+                            <th>用户</th>
+                            <th>仓库</th>
+                            <th>成功</th>
+                            <th>失败</th>
+                            <th>固件</th>
+                            <th>成功时间</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="github_monitor_body">
+                        <tr><td colspan="7">暂无监控仓库</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="hero-status speed-card">
+            <div class="speed-title">实时网速</div>
+            <div class="speed-line down"><span>下载</span><strong id="speed_down">--</strong></div>
+            <div class="speed-line up"><span>上传</span><strong id="speed_up">--</strong></div>
+        </div>
+    </section>
+
+    <section class="quick-grid">
+        <div class="quick q1"><div class="qicon">♨</div><p>CPU 温度</p><b id="temperature">--</b><span id="cpu_freq">--</span></div>
+        <div class="quick q2"><div class="qicon">⌁</div><p>系统负载</p><b id="load">--</b><span>1m / 5m / 15m</span></div>
+        <div class="quick q3"><div class="qicon">▣</div><p>内存使用</p><b id="mem_pct">--</b><span id="mem_text">--</span></div>
+        <div class="quick q4"><div class="qicon">⇄</div><p>连接数</p><b id="conntrack">--</b><span>nf_conntrack</span></div>
+    </section>
+
+    <section class="main-grid">
+        <div class="panel wide">
+            <div class="title"><strong>网络信息</strong><em id="wan_dev">--</em></div>
+            <div class="net-grid">
+                <div><span>LAN IPv4</span><b id="lan_ip">--</b></div>
+                <div><span>LAN IPv6</span><b id="lan_ipv6">--</b></div>
+                <div><span>WAN IPv4</span><b id="wan_ip">--</b></div>
+                <div><span>默认网关</span><b id="gateway">--</b></div>
+                <div><span>接收总量</span><b id="rx">--</b></div>
+                <div><span>发送总量</span><b id="tx">--</b></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="title"><strong>插件状态</strong><em>Plugin</em></div>
+            <div class="service"><i id="dot-passwall"></i><span>PassWall</span><b id="passwall">--</b></div>
+            <div class="service"><i id="dot-mosdns"></i><span>MosDNS</span><b id="mosdns">--</b></div>
+            <div class="service"><i id="dot-lucky"></i><span>Lucky</span><b id="lucky">--</b></div>
+            <div class="service"><i id="dot-gecoosac"></i><span>GecoosAC</span><b id="gecoosac">--</b></div>
+        </div>
+    </section>
+
+    <section class="main-grid">
+        <div class="panel">
+            <div class="title"><strong>系统状态</strong><em id="time">--</em></div>
+            <div class="kv"><span>设备型号</span><b id="model">--</b></div>
+            <div class="kv"><span>主机名</span><b id="hostname">--</b></div>
+            <div class="kv"><span>内核版本</span><b id="kernel">--</b></div>
+            <div class="kv"><span>运行时间</span><b id="uptime">--</b></div>
+            <div class="kv"><span>Overlay</span><b id="overlay">--</b></div>
+            <div class="kv"><span>RootFS</span><b id="rootfs">--</b></div>
+        </div>
+
+        <div class="panel">
+            <div class="title"><strong>核心服务</strong><em>Core</em></div>
+            <div class="service"><i id="dot-dnsmasq"></i><span>Dnsmasq</span><b id="dnsmasq">--</b></div>
+            <div class="service"><i id="dot-dropbear"></i><span>Dropbear SSH</span><b id="dropbear">--</b></div>
+            <div class="service"><i id="dot-firewall"></i><span>Firewall</span><b id="firewall">--</b></div>
+            <div class="service"><i id="dot-network"></i><span>Network</span><b id="network">--</b></div>
+
+            <div class="nss-inline-box">
+                <div class="nss-inline-head">
+                    <span class="nss-inline-title">NSS 加速检测</span>
+                    <em id="nss_status">--</em>
+                </div>
+
+                <div class="kv nss-inline-row">
+                    <span>已加载模块</span>
+                    <b id="nss_modules">--</b>
+                </div>
+
+                <div class="kv nss-inline-row">
+                    <span>加速能力</span>
+                    <b id="nss_accel">--</b>
+                </div>
+
+            </div>
+
+            <div class="public-port-inline">
+                <div class="public-port-inline-head">
+                    <span class="public-port-inline-title">公网开放端口</span>
+                    <em id="public_ip">--</em>
+                </div>
+
+                <div class="kv public-port-inline-row">
+                    <span>在线扫描</span>
+                    <b id="public_open_ports">--</b>
+                </div>
+
+                <p class="public-port-inline-note">通过在线端口扫描服务检测当前公网 IP 的开放端口，仅供参考；若接口限流会显示扫描受限。</p>
+            </div>
+
+            <div class="public-port-box">
+                <div class="public-port-title">
+                    <strong>公网开放端口</strong>
+                    <em id="public_ip">--</em>
+                </div>
+
+                <div class="public-port-row">
+                    <span>疑似开放</span>
+                    <b id="public_open_ports">--</b>
+                </div>
+
+                <div class="public-port-row">
+                    <span>本机监听</span>
+                    <b id="local_listen_ports">--</b>
+                </div>
+
+                <div class="public-port-row">
+                    <span>端口转发</span>
+                    <b id="firewall_redirect_ports">--</b>
+                </div>
+
+                <p class="public-port-note">内网自测公网端口会受 NAT 回环和运营商网络影响，仅作参考。</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="main-grid">
+        <div class="panel">
+            <div class="title"><strong>在线设备 / DHCP</strong><em id="dhcp_count">0 台</em></div>
+            <pre id="dhcp_list">--</pre>
+        </div>
+
+        <div class="panel">
+            <div class="title"><strong>DNS 服务器</strong><em>DNS</em></div>
+            <pre id="dns">--</pre>
+        </div>
+    </section>
+</div>
+
+<script src="/luci-static/m2more/common.js?v=20260514"></script>
+<script src="/luci-static/m2more/status-color.js?v=20260518"></script>
+<script src="/luci-static/m2more/nowrap-fit.js?v=20260518"></script>
+<script src="/luci-static/m2more/temp-mem-color.js?v=20260518"></script>
+<script src="/luci-static/m2more/speed-monitor.js?v=20260518"></script>
+<script src="/luci-static/m2more/znm2-anim.js?v=20260517"></script>
+<script src="/luci-static/m2more/github-monitor.js?v=20260517"></script>
+
+<%+footer%>

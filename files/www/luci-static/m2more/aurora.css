@@ -1,0 +1,1331 @@
+.m2more.aurora {
+    color: #1e293b;
+    background:
+        radial-gradient(circle at 12% 8%, rgba(142, 169, 255, .36), transparent 30%),
+        radial-gradient(circle at 88% 12%, rgba(197, 167, 255, .30), transparent 32%),
+        radial-gradient(circle at 70% 88%, rgba(120, 224, 211, .28), transparent 30%),
+        linear-gradient(135deg, #edf3ff 0%, #eef0ff 38%, #eaf7ff 68%, #eafbf7 100%);
+    box-shadow: 0 28px 90px rgba(100, 116, 139, .18);
+}
+
+.aurora .hero,
+.aurora .panel,
+.aurora .quick {
+    background: rgba(255,255,255,.42);
+    border: 1px solid rgba(255,255,255,.58);
+    box-shadow:
+        0 18px 48px rgba(100, 116, 139, .16),
+        inset 0 1px 0 rgba(255,255,255,.55);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.aurora .latency-ticker {
+    background: rgba(255,255,255,.34);
+    border: 1px solid rgba(255,255,255,.48);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+}
+
+.aurora .ticker-track span,
+.aurora .title em {
+    color: #334155;
+    background: rgba(255,255,255,.42);
+    border: 1px solid rgba(255,255,255,.52);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.40);
+}
+
+.aurora .ticker-track b {
+    color: #2563eb;
+}
+
+.aurora .hero-status {
+    color: #1e293b;
+    background: rgba(255,255,255,.40);
+    border: 1px solid rgba(255,255,255,.58);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow:
+        0 18px 48px rgba(100, 116, 139, .16),
+        inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+.aurora .q1,
+.aurora .q2,
+.aurora .q3,
+.aurora .q4 {
+    background: rgba(255,255,255,.40);
+}
+
+.aurora .quick:after {
+    background: linear-gradient(135deg, rgba(96,165,250,.45), rgba(167,139,250,.35));
+}
+
+.aurora .qicon,
+.aurora .net-grid div,
+.aurora .kv,
+.aurora pre {
+    background: rgba(255,255,255,.36);
+    border: 1px solid rgba(255,255,255,.46);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.aurora .hero h1,
+.aurora .quick b,
+.aurora .net-grid b,
+.aurora .kv b,
+.aurora .service b,
+.aurora .title strong,
+.aurora .hero-status strong {
+    color: #0f172a;
+}
+
+.aurora .quick p,
+.aurora .quick span,
+.aurora .net-grid span,
+.aurora .kv span,
+.aurora .service span,
+.aurora .hero-status span {
+    color: rgba(51,65,85,.76);
+}
+
+.aurora .service {
+    border-bottom: 1px solid rgba(255,255,255,.36);
+}
+
+.aurora .service i {
+    background: #fb7185;
+    box-shadow: 0 0 12px rgba(251,113,133,.65);
+}
+
+.aurora .service i.ok {
+    background: #10b981;
+    box-shadow: 0 0 12px rgba(16,185,129,.65);
+}
+
+.aurora pre {
+    color: #334155;
+}
+
+/* 单项延迟轮播：一次只显示一个 */
+.aurora .latency-single {
+    width: 230px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    color: #334155;
+    background: rgba(255,255,255,.44);
+    border: 1px solid rgba(255,255,255,.58);
+    box-shadow:
+        0 10px 28px rgba(100, 116, 139, .12),
+        inset 0 1px 0 rgba(255,255,255,.45);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    transition: opacity .3s ease, transform .3s ease;
+    overflow: hidden;
+}
+
+.aurora .latency-single span {
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.aurora .latency-single b {
+    font-size: 13px;
+    font-weight: 900;
+    color: #2563eb;
+    white-space: nowrap;
+}
+
+.aurora .latency-single.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.aurora .latency-single.hide {
+    opacity: 0;
+    transform: translateY(-9px);
+}
+
+/* === 修复延迟轮播间距：平台名 / 延迟 / 数值 三段紧凑显示 === */
+.aurora .latency-single {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    display: inline-grid !important;
+    grid-template-columns: auto auto auto !important;
+    justify-content: start !important;
+    justify-items: start !important;
+    align-items: center !important;
+    column-gap: 8px !important;
+    padding: 8px 16px !important;
+    border-radius: 999px !important;
+}
+
+.aurora .latency-single .latency-site,
+.aurora .latency-single .latency-label {
+    display: inline-block !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    color: #334155 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.aurora .latency-single .latency-ms {
+    display: inline-block !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    color: #2563eb !important;
+    margin: 0 0 0 2px !important;
+    padding: 0 !important;
+    text-align: left !important;
+}
+
+/* 兼容旧 span/b 样式，防止旧 CSS 把两端撑开 */
+.aurora .latency-single span,
+.aurora .latency-single b {
+    flex: unset !important;
+}
+
+/* 公网开放端口显示模块 */
+.aurora .public-port-box {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 22px;
+    background: rgba(255,255,255,.34);
+    border: 1px solid rgba(255,255,255,.46);
+    box-shadow:
+        0 14px 34px rgba(100, 116, 139, .12),
+        inset 0 1px 0 rgba(255,255,255,.38);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.aurora .public-port-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.aurora .public-port-title strong {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.aurora .public-port-title em {
+    font-style: normal;
+    max-width: 52%;
+    padding: 5px 10px;
+    border-radius: 999px;
+    color: #2563eb;
+    background: rgba(255,255,255,.44);
+    border: 1px solid rgba(255,255,255,.52);
+    font-size: 12px;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aurora .public-port-row {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,.28);
+}
+
+.aurora .public-port-row span {
+    color: rgba(51,65,85,.72);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.aurora .public-port-row b {
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+.aurora .public-port-note {
+    margin: 12px 0 0;
+    color: rgba(51,65,85,.62);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+/* 隐藏旧的单独大卡片 */
+.aurora .public-port-box {
+    display: none !important;
+}
+
+/* 并入“核心服务”同层显示 */
+.aurora .public-port-inline {
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,.26);
+}
+
+.aurora .public-port-inline-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0 10px;
+}
+
+.aurora .public-port-inline-title {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.aurora .public-port-inline-head em {
+    font-style: normal;
+    max-width: 52%;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: #2563eb;
+    background: rgba(255,255,255,.42);
+    border: 1px solid rgba(255,255,255,.52);
+    font-size: 12px;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aurora .public-port-inline-row {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    background: rgba(255,255,255,.28) !important;
+    border: 1px solid rgba(255,255,255,.34) !important;
+}
+
+.aurora .public-port-inline-row span {
+    color: rgba(51,65,85,.72) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+.aurora .public-port-inline-row b {
+    color: #0f172a !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    line-height: 1.55 !important;
+    word-break: break-word !important;
+    text-align: right !important;
+}
+
+.aurora .public-port-inline-note {
+    margin: 10px 0 0;
+    color: rgba(51,65,85,.62);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+/* 隐藏旧公网开放端口模块 */
+.aurora .public-port-box,
+.aurora .public-port-inline {
+    display: none !important;
+}
+
+/* NSS 加速检测：并入核心服务面板 */
+.aurora .nss-inline-box {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,.26);
+}
+
+.aurora .nss-inline-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0 10px;
+}
+
+.aurora .nss-inline-title {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.aurora .nss-inline-head em {
+    font-style: normal;
+    max-width: 52%;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: #2563eb;
+    background: rgba(255,255,255,.42);
+    border: 1px solid rgba(255,255,255,.52);
+    font-size: 12px;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aurora .nss-inline-row {
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    background: rgba(255,255,255,.28) !important;
+    border: 1px solid rgba(255,255,255,.34) !important;
+}
+
+.aurora .nss-inline-row span {
+    color: rgba(51,65,85,.72) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+}
+
+.aurora .nss-inline-row b {
+    color: #0f172a !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    line-height: 1.55 !important;
+    word-break: break-word !important;
+    text-align: right !important;
+}
+
+.aurora .nss-inline-note {
+    margin: 8px 0 0;
+    color: rgba(51,65,85,.62);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+/* NSS 单项滚动显示：每 3 秒切换一个模块 / 一个能力 */
+.aurora #nss_modules,
+.aurora #nss_accel {
+    display: inline-block !important;
+    min-height: 18px;
+    transition: opacity .26s ease, transform .26s ease;
+}
+
+.aurora #nss_modules.nss-roll-show,
+.aurora #nss_accel.nss-roll-show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.aurora #nss_modules.nss-roll-hide,
+.aurora #nss_accel.nss-roll-hide {
+    opacity: 0;
+    transform: translateY(-7px);
+}
+
+/* 隐藏 NSS 说明文字 */
+.aurora .nss-inline-note {
+    display: none !important;
+}
+
+/* GitHub 编译监控 */
+.aurora .hero {
+    display: grid !important;
+    grid-template-columns: minmax(260px, 1fr) minmax(420px, 1.25fr) 170px !important;
+    align-items: stretch !important;
+}
+
+.aurora .github-monitor-box {
+    min-width: 0;
+    padding: 16px;
+    border-radius: 26px;
+    background: rgba(255,255,255,.34);
+    border: 1px solid rgba(255,255,255,.48);
+    box-shadow:
+        0 14px 36px rgba(100,116,139,.12),
+        inset 0 1px 0 rgba(255,255,255,.38);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+}
+
+.aurora .github-monitor-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.aurora .github-monitor-head strong {
+    color: #0f172a;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.aurora .github-monitor-head span {
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: #2563eb;
+    background: rgba(255,255,255,.42);
+    border: 1px solid rgba(255,255,255,.52);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.aurora .github-monitor-input {
+    display: grid;
+    grid-template-columns: 1fr 58px;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.aurora .github-monitor-input input {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid rgba(255,255,255,.55);
+    background: rgba(255,255,255,.44);
+    border-radius: 14px;
+    padding: 8px 10px;
+    outline: none;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.aurora .github-monitor-input input::placeholder {
+    color: rgba(51,65,85,.46);
+}
+
+.aurora .github-monitor-input button,
+.aurora .github-remove-btn {
+    border: 1px solid rgba(255,255,255,.55);
+    background: rgba(37,99,235,.88);
+    color: white;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.aurora .github-monitor-table-wrap {
+    overflow: auto;
+    max-height: 118px;
+}
+
+.aurora .github-monitor-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    color: #334155;
+}
+
+.aurora .github-monitor-table th {
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,.68);
+    color: rgba(51,65,85,.72);
+    font-weight: 900;
+    text-align: left;
+    padding: 6px 5px;
+    white-space: nowrap;
+}
+
+.aurora .github-monitor-table td {
+    padding: 7px 5px;
+    border-top: 1px solid rgba(255,255,255,.32);
+    white-space: nowrap;
+    font-weight: 800;
+}
+
+.aurora .github-monitor-table .ok-num {
+    color: #10b981;
+    font-weight: 900;
+}
+
+.aurora .github-monitor-table .bad-num {
+    color: #fb7185;
+    font-weight: 900;
+}
+
+.aurora .github-monitor-table .fw-num {
+    color: #2563eb;
+    font-weight: 900;
+}
+
+.aurora .github-remove-btn {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    background: rgba(251,113,133,.88);
+}
+
+@media (max-width: 1200px) {
+    .aurora .hero {
+        grid-template-columns: 1fr !important;
+    }
+
+    .aurora .github-monitor-box {
+        order: 2;
+    }
+
+    .aurora .hero-status {
+        order: 3;
+    }
+}
+
+/* 修复 GitHub 编译监控位置：放到顶部中间红框区域 */
+.aurora .hero {
+    display: grid !important;
+    grid-template-columns: minmax(230px, 0.75fr) minmax(420px, 1.15fr) 170px !important;
+    gap: 24px !important;
+    align-items: center !important;
+}
+
+.aurora .hero-left {
+    grid-column: 1 !important;
+    min-width: 0 !important;
+}
+
+.aurora .github-monitor-box {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    min-width: 0 !important;
+    max-width: 660px !important;
+    width: 100% !important;
+    padding: 16px !important;
+    border-radius: 26px !important;
+    background: rgba(255,255,255,.34) !important;
+    border: 1px solid rgba(255,255,255,.48) !important;
+    box-shadow:
+        0 14px 36px rgba(100,116,139,.12),
+        inset 0 1px 0 rgba(255,255,255,.38) !important;
+    backdrop-filter: blur(22px) !important;
+    -webkit-backdrop-filter: blur(22px) !important;
+}
+
+.aurora .hero-status {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+}
+
+.aurora .github-monitor-input input {
+    color: #0f172a !important;
+}
+
+.aurora .github-monitor-input input::placeholder {
+    color: transparent !important;
+}
+
+@media (max-width: 1200px) {
+    .aurora .hero {
+        grid-template-columns: 1fr !important;
+    }
+
+    .aurora .hero-left,
+    .aurora .github-monitor-box,
+    .aurora .hero-status {
+        grid-column: 1 !important;
+    }
+
+    .aurora .github-monitor-box {
+        max-width: none !important;
+    }
+
+    .aurora .hero-status {
+        justify-self: stretch !important;
+    }
+}
+
+/* GitHub 编译监控居中：左右间距一致 */
+.aurora .hero {
+    display: grid !important;
+    grid-template-columns: minmax(260px, 1fr) minmax(560px, 720px) minmax(260px, 1fr) !important;
+    gap: 28px !important;
+    align-items: center !important;
+}
+
+.aurora .hero-left {
+    grid-column: 1 !important;
+    justify-self: start !important;
+    min-width: 0 !important;
+}
+
+.aurora .github-monitor-box {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    justify-self: center !important;
+    align-self: center !important;
+    width: 100% !important;
+    max-width: 720px !important;
+    min-width: 0 !important;
+    padding: 16px !important;
+    border-radius: 26px !important;
+    background: rgba(255,255,255,.34) !important;
+    border: 1px solid rgba(255,255,255,.48) !important;
+    box-shadow:
+        0 14px 36px rgba(100,116,139,.12),
+        inset 0 1px 0 rgba(255,255,255,.38) !important;
+    backdrop-filter: blur(22px) !important;
+    -webkit-backdrop-filter: blur(22px) !important;
+}
+
+.aurora .hero-status {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    justify-self: end !important;
+}
+
+.aurora .github-monitor-input input {
+    color: #0f172a !important;
+}
+
+.aurora .github-monitor-input input::placeholder {
+    color: transparent !important;
+}
+
+.aurora .github-monitor-table-wrap {
+    max-height: 118px !important;
+    overflow: auto !important;
+}
+
+.aurora .github-monitor-table {
+    table-layout: fixed !important;
+}
+
+.aurora .github-monitor-table th,
+.aurora .github-monitor-table td {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+@media (max-width: 1200px) {
+    .aurora .hero {
+        grid-template-columns: 1fr !important;
+    }
+
+    .aurora .hero-left,
+    .aurora .github-monitor-box,
+    .aurora .hero-status {
+        grid-column: 1 !important;
+    }
+
+    .aurora .github-monitor-box {
+        max-width: none !important;
+    }
+
+    .aurora .hero-status {
+        justify-self: stretch !important;
+    }
+}
+
+.aurora #github_refresh_btn {
+    border: 1px solid rgba(255,255,255,.55);
+    background: rgba(255,255,255,.46);
+    color: #2563eb;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    margin-left: 6px;
+}
+
+/* 标题改为 ZN M2 后，延迟显示放到标题下方 */
+.aurora .hero-left {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+}
+
+.aurora .hero-left h1 {
+    margin: 0 0 18px 0 !important;
+    font-size: 44px !important;
+    line-height: 1.05 !important;
+    font-weight: 900 !important;
+    letter-spacing: -1px !important;
+}
+
+.aurora .latency-under-title {
+    margin-top: 0 !important;
+}
+
+.aurora .latency-single {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    display: inline-grid !important;
+    grid-template-columns: auto auto auto !important;
+    justify-content: start !important;
+    justify-items: start !important;
+    align-items: center !important;
+    column-gap: 8px !important;
+    padding: 8px 16px !important;
+    border-radius: 999px !important;
+}
+
+.aurora .latency-single .latency-site,
+.aurora .latency-single .latency-label {
+    display: inline-block !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    color: #334155 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.aurora .latency-single .latency-ms {
+    display: inline-block !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    color: #2563eb !important;
+    margin: 0 0 0 2px !important;
+    padding: 0 !important;
+    text-align: left !important;
+}
+
+/* ========= 左侧标题 + 延迟卡片：居中并下沉到底边 ========= */
+
+/* 左侧整列撑满 hero 高度 */
+.aurora .hero-left {
+    grid-column: 1 !important;
+    align-self: stretch !important;
+    height: 100% !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;      /* ZN M2 和延迟卡片水平居中 */
+    justify-content: flex-start !important;
+    text-align: center !important;
+    min-width: 0 !important;
+}
+
+/* ZN M2 居中显示 */
+.aurora .hero-left h1 {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 44px !important;
+    line-height: 1.05 !important;
+    font-weight: 900 !important;
+    letter-spacing: -1px !important;
+    text-align: center !important;
+}
+
+/* 延迟卡片推到最下方，与右侧健康度卡片底边接近对齐 */
+.aurora .latency-under-title,
+.aurora .latency-single {
+    margin-top: auto !important;         /* 关键：推到底部 */
+    margin-bottom: 0 !important;
+    align-self: center !important;       /* 相对 ZN M2 中心对齐 */
+}
+
+/* 延迟卡片样式保持紧凑 */
+.aurora .latency-single {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 40px !important;
+    display: inline-grid !important;
+    grid-template-columns: auto auto auto !important;
+    justify-content: start !important;
+    justify-items: start !important;
+    align-items: center !important;
+    column-gap: 8px !important;
+    padding: 8px 16px !important;
+    border-radius: 999px !important;
+}
+
+/* 卡片内三段文字 */
+.aurora .latency-single .latency-site,
+.aurora .latency-single .latency-label {
+    display: inline-block !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    color: #334155 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.aurora .latency-single .latency-ms {
+    display: inline-block !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+    color: #2563eb !important;
+    margin: 0 0 0 2px !important;
+    padding: 0 !important;
+    text-align: left !important;
+}
+
+/* 顶部整体三栏继续保持 */
+.aurora .hero {
+    align-items: stretch !important;     /* 保证左中右三列同高，左侧才能贴到底 */
+}
+
+/* 右侧健康卡片固定靠中下显示更稳定 */
+.aurora .hero-status {
+    align-self: stretch !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+
+/* 小屏时恢复自然布局，避免挤压 */
+@media (max-width: 1200px) {
+    .aurora .hero-left {
+        align-items: center !important;
+        text-align: center !important;
+        height: auto !important;
+    }
+
+    .aurora .latency-under-title,
+    .aurora .latency-single {
+        margin-top: 18px !important;
+    }
+}
+
+/* ===== ZN M2 跳动 + 随机彩色 ===== */
+.aurora .znm2-animated {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    line-height: 1 !important;
+    font-size: 0 !important; /* 防止 inline-block 间隙 */
+    user-select: none !important;
+}
+
+.aurora .znm2-letter {
+    display: inline-block !important;
+    font-size: 68px !important;
+    font-weight: 900 !important;
+    letter-spacing: -2px !important;
+    line-height: 1 !important;
+    transition: color .35s ease;
+    animation: znm2-bounce 1.15s ease-in-out infinite;
+    will-change: transform;
+}
+
+/* ZN 和 M2 中间留一点空白 */
+.aurora .znm2-gap {
+    display: inline-block !important;
+    width: 18px !important;
+}
+
+/* 每个字符错开时间，形成跳动感 */
+.aurora .znm2-letter[data-i="0"] { animation-delay: 0s; }
+.aurora .znm2-letter[data-i="1"] { animation-delay: .14s; }
+.aurora .znm2-letter[data-i="2"] { animation-delay: .28s; }
+.aurora .znm2-letter[data-i="3"] { animation-delay: .42s; }
+
+@keyframes znm2-bounce {
+    0%   { transform: translateY(0) scale(1); }
+    15%  { transform: translateY(-8px) scale(1.03); }
+    30%  { transform: translateY(0) scale(1); }
+    45%  { transform: translateY(-14px) scale(1.05); }
+    60%  { transform: translateY(0) scale(1); }
+    75%  { transform: translateY(-6px) scale(1.02); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+/* ===== ZN M2 大幅跳动，但限制在红框区域内 ===== */
+
+/* 左侧区域保持独立布局 */
+.aurora .hero-left {
+    align-self: stretch !important;
+    height: 100% !important;
+    min-height: 260px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: center !important;
+    overflow: visible !important;
+}
+
+/* 标题动画舞台：这个就是限制跳动的盒子 */
+.aurora .znm2-stage {
+    width: 100% !important;
+    height: 190px !important;
+    min-height: 190px !important;
+    max-height: 190px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    position: relative !important;
+    padding: 24px 10px !important;
+    box-sizing: border-box !important;
+}
+
+/* 动画标题本体 */
+.aurora .znm2-animated {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    line-height: 1 !important;
+    font-size: 0 !important;
+    user-select: none !important;
+    transform: translateY(0) !important;
+}
+
+/* 字母更大，但舞台会裁切，保证不超框 */
+.aurora .znm2-letter {
+    display: inline-block !important;
+    font-size: 74px !important;
+    font-weight: 900 !important;
+    letter-spacing: -3px !important;
+    line-height: 1 !important;
+    transition: color .32s ease;
+    animation: znm2-big-bounce 1.25s ease-in-out infinite !important;
+    will-change: transform;
+}
+
+/* ZN 和 M2 中间空隙 */
+.aurora .znm2-gap {
+    display: inline-block !important;
+    width: 18px !important;
+}
+
+/* 每个字符错开跳动 */
+.aurora .znm2-letter[data-i="0"] { animation-delay: 0s !important; }
+.aurora .znm2-letter[data-i="1"] { animation-delay: .16s !important; }
+.aurora .znm2-letter[data-i="2"] { animation-delay: .32s !important; }
+.aurora .znm2-letter[data-i="3"] { animation-delay: .48s !important; }
+
+/* 更大的跳动幅度；最大上跳 34px，下落 8px，舞台高度会限制不超框 */
+@keyframes znm2-big-bounce {
+    0%   { transform: translateY(0) scale(1); }
+    12%  { transform: translateY(-20px) scale(1.04); }
+    24%  { transform: translateY(6px) scale(.99); }
+    38%  { transform: translateY(-34px) scale(1.08); }
+    52%  { transform: translateY(8px) scale(.98); }
+    68%  { transform: translateY(-18px) scale(1.04); }
+    82%  { transform: translateY(3px) scale(1); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+/* 延迟卡片保持在标题区域下面 */
+.aurora .latency-under-title,
+.aurora .latency-single {
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+    align-self: center !important;
+}
+
+/* 小屏降低字号和舞台高度 */
+@media (max-width: 760px) {
+    .aurora .hero-left {
+        min-height: 220px !important;
+    }
+
+    .aurora .znm2-stage {
+        height: 150px !important;
+        min-height: 150px !important;
+        max-height: 150px !important;
+    }
+
+    .aurora .znm2-letter {
+        font-size: 56px !important;
+    }
+}
+
+/* 右侧实时网速卡片，替代健康度 */
+.aurora .hero-status.speed-card {
+    padding: 22px 24px !important;
+    min-width: 190px !important;
+    height: 150px !important;
+    border-radius: 34px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    text-align: left !important;
+}
+
+.aurora .speed-title {
+    color: rgba(51,65,85,.72);
+    font-size: 13px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 2px;
+}
+
+.aurora .speed-line {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.aurora .speed-line span {
+    font-size: 12px;
+    font-weight: 900;
+    color: rgba(51,65,85,.68);
+}
+
+.aurora .speed-line strong {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 900;
+    color: #0f172a;
+    white-space: nowrap;
+}
+
+.aurora .speed-line.down strong {
+    color: #2563eb;
+}
+
+.aurora .speed-line.up strong {
+    color: #10b981;
+}
+
+/* 防止旧健康度样式影响 */
+.aurora .hero-status.speed-card #health {
+    display: none !important;
+}
+
+@media (max-width: 1200px) {
+    .aurora .hero-status.speed-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        transform: none !important;
+    }
+}
+
+/* ===== 实时网速卡片：下移到左侧 ZN M2 区域中部对齐 ===== */
+.aurora .hero-status.speed-card {
+    transform: translateY(54px) !important;
+    align-self: center !important;
+    justify-self: end !important;
+
+    padding: 22px 24px !important;
+    min-width: 190px !important;
+    height: 150px !important;
+    border-radius: 34px !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    text-align: left !important;
+}
+
+.aurora .speed-title {
+    color: rgba(51,65,85,.72) !important;
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    text-align: center !important;
+    margin-bottom: 2px !important;
+}
+
+.aurora .speed-line {
+    display: grid !important;
+    grid-template-columns: 42px 1fr !important;
+    align-items: baseline !important;
+    gap: 10px !important;
+}
+
+.aurora .speed-line span {
+    font-size: 12px !important;
+    font-weight: 900 !important;
+    color: rgba(51,65,85,.68) !important;
+}
+
+.aurora .speed-line strong {
+    font-size: 20px !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    white-space: nowrap !important;
+}
+
+.aurora .speed-line.down strong {
+    color: #2563eb !important;
+}
+
+.aurora .speed-line.up strong {
+    color: #10b981 !important;
+}
+
+/* 小屏不要下移，避免挤压 */
+@media (max-width: 1200px) {
+    .aurora .hero-status.speed-card {
+        transform: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* ===== 实时网速卡片：上移到与中间卡片更接近的垂直居中位置 ===== */
+.aurora .hero-status.speed-card {
+    transform: translateY(10px) !important;   /* 原来太低，这里改小 */
+    align-self: center !important;
+    justify-self: end !important;
+}
+
+/* 小屏不偏移 */
+@media (max-width: 1200px) {
+    .aurora .hero-status.speed-card {
+        transform: none !important;
+    }
+}
+
+/* ===== 顶部四个状态卡片：图标、文字、参数全部居中 ===== */
+.aurora .quick-grid .quick {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    min-height: 180px !important;
+    padding: 22px 18px !important;
+}
+
+/* 图标居中 */
+.aurora .quick-grid .quick .qicon {
+    margin: 0 auto 14px auto !important;
+    align-self: center !important;
+}
+
+/* 标题居中 */
+.aurora .quick-grid .quick p {
+    width: 100% !important;
+    margin: 0 0 12px 0 !important;
+    text-align: center !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+}
+
+/* 主要参数居中 */
+.aurora .quick-grid .quick b {
+    width: 100% !important;
+    display: block !important;
+    text-align: center !important;
+    font-size: 30px !important;
+    line-height: 1.15 !important;
+    font-weight: 900 !important;
+    word-break: break-word !important;
+}
+
+/* 底部说明居中 */
+.aurora .quick-grid .quick span {
+    width: 100% !important;
+    display: block !important;
+    margin-top: 12px !important;
+    text-align: center !important;
+    font-size: 13px !important;
+}
+
+/* 防止右上角装饰圆影响文字层级 */
+.aurora .quick-grid .quick .qicon,
+.aurora .quick-grid .quick p,
+.aurora .quick-grid .quick b,
+.aurora .quick-grid .quick span {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* 小屏保持居中 */
+@media (max-width: 760px) {
+    .aurora .quick-grid .quick {
+        min-height: 160px !important;
+    }
+
+    .aurora .quick-grid .quick b {
+        font-size: 26px !important;
+    }
+}
+
+/* CPU 温度 / 内存使用 阈值颜色 */
+.aurora .m2-value-green {
+    color: #10b981 !important;
+    text-shadow: 0 8px 24px rgba(16, 185, 129, .22);
+}
+
+.aurora .m2-value-orange {
+    color: #f59e0b !important;
+    text-shadow: 0 8px 24px rgba(245, 158, 11, .22);
+}
+
+.aurora .m2-value-red {
+    color: #ef4444 !important;
+    text-shadow: 0 8px 24px rgba(239, 68, 68, .22);
+}
+
+/* 系统负载 / 连接数：保持一行，不换行，字体自动缩放 */
+.aurora #load,
+.aurora #conntrack {
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    line-height: 1.15 !important;
+    max-width: 100% !important;
+}
+
+/* 连接数通常更长，默认略小一点 */
+.aurora #conntrack {
+    font-size: 28px !important;
+}
+
+/* 系统负载默认保持大字 */
+.aurora #load {
+    font-size: 30px !important;
+}
+
+/* 运行状态文字颜色 */
+.aurora .m2-status-ok {
+    color: #10b981 !important;
+    text-shadow: 0 8px 22px rgba(16,185,129,.22) !important;
+}
+
+.aurora .m2-status-bad {
+    color: #ef4444 !important;
+    text-shadow: 0 8px 22px rgba(239,68,68,.22) !important;
+}
+
+/* 插件状态 / 核心服务右侧状态文字加粗 */
+.aurora .service b.m2-status-ok,
+.aurora .service b.m2-status-bad {
+    font-weight: 900 !important;
+}
+
+/* NSS 已加载标签也跟随颜色 */
+.aurora .nss-inline-head em.m2-status-ok {
+    color: #10b981 !important;
+}
+
+.aurora .nss-inline-head em.m2-status-bad {
+    color: #ef4444 !important;
+}
+
+/* NSS 检测参数显示为绿色 */
+.aurora #nss_modules,
+.aurora #nss_accel,
+.aurora .nss-inline-row b#nss_modules,
+.aurora .nss-inline-row b#nss_accel {
+    color: #10b981 !important;
+    text-shadow: 0 8px 22px rgba(16,185,129,.20) !important;
+    font-weight: 900 !important;
+}
