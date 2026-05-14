@@ -1,6 +1,5 @@
 # SPDX-License-Identifier: MIT
-# Copyright (C) 2026
-# 云编译公用核心
+# ZNM2 LiBwrt CI Core Workflow
 
 name: WRT-CORE
 
@@ -112,7 +111,6 @@ jobs:
           cd ./wrt/
           echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
-          # GitHub Action 移除国内下载源，减少下载异常
           PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
           if [ -f "$PROJECT_MIRRORS_FILE" ]; then
             sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
@@ -120,7 +118,8 @@ jobs:
 
       - name: Check Scripts
         run: |
-          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+          find ./ -maxdepth 4 -type f -iregex ".*\(txt\|sh\|json\|css\|js\|htm\|lua\)$" -exec dos2unix {} \; || true
+          find ./ -maxdepth 4 -type f -iregex ".*\(sh\)$" -exec chmod +x {} \; || true
 
       - name: Check Caches
         id: check-cache
@@ -165,17 +164,91 @@ jobs:
           if [ -d "$GITHUB_WORKSPACE/files" ]; then
             mkdir -p "$GITHUB_WORKSPACE/wrt/files"
             cp -af "$GITHUB_WORKSPACE/files/." "$GITHUB_WORKSPACE/wrt/files/"
-
-            chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/"* 2>/dev/null || true
-            chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/init.d/"* 2>/dev/null || true
-
-            echo "==== Custom files copied ===="
-            find "$GITHUB_WORKSPACE/wrt/files" -maxdepth 8 -type f | sort | head -n 500
+            echo "Root files directory copied."
           else
-            echo "No custom files directory found"
+            echo "No root files directory found. Continue."
           fi
 
-          echo "==== Check M2 Aurora files ===="
+          echo "==== Create M2 Aurora LuCI menu file ===="
+          mkdir -p "$GITHUB_WORKSPACE/wrt/files/usr/share/luci/menu.d"
+
+          cat > "$GITHUB_WORKSPACE/wrt/files/usr/share/luci/menu.d/m2-aurora-home.json" <<'MENUJSON'
+          {
+            "admin/status/m2aurora": {
+              "title": "M2 Aurora 首页",
+              "order": -100,
+              "action": {
+                "type": "template",
+                "path": "m2more/aurora"
+              },
+              "depends": {
+                "fs": {
+                  "/usr/lib/lua/luci/view/m2more/aurora.htm": "file"
+                }
+              }
+            }
+          }
+          MENUJSON
+
+          echo "==== Create M2 Aurora default home script ===="
+          mkdir -p "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults"
+
+          cat > "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home" <<'UCIDEFAULT'
+          #!/bin/sh
+
+          echo "==== Set M2 Aurora as LuCI default home ===="
+
+          uci -q set luci.main.mediaurlbase='/luci-static/aurora'
+          uci -q commit luci
+
+          INDEX_LUA="/usr/lib/lua/luci/controller/admin/index.lua"
+
+          if [ -f "$INDEX_LUA" ]; then
+              sed -i 's/alias("admin", "status", "overview")/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
+              sed -i "s/alias('admin', 'status', 'overview')/alias('admin', 'status', 'm2aurora')/g" "$INDEX_LUA"
+              sed -i 's/firstchild()/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
+          fi
+
+          MENU_DIR="/usr/share/luci/menu.d"
+          BASE_JSON="$MENU_DIR/luci-base.json"
+
+          mkdir -p "$MENU_DIR"
+
+          cat > "$MENU_DIR/m2-aurora-home.json" <<'INNERMENUJSON'
+          {
+            "admin/status/m2aurora": {
+              "title": "M2 Aurora 首页",
+              "order": -100,
+              "action": {
+                "type": "template",
+                "path": "m2more/aurora"
+              },
+              "depends": {
+                "fs": {
+                  "/usr/lib/lua/luci/view/m2more/aurora.htm": "file"
+                }
+              }
+            }
+          }
+          INNERMENUJSON
+
+          if [ -f "$BASE_JSON" ]; then
+              sed -i 's#admin/status/overview#admin/status/m2aurora#g' "$BASE_JSON"
+          fi
+
+          rm -rf /tmp/luci-indexcache /tmp/luci-modulecache /tmp/luci-indexcache.* /tmp/luci-modulecache.* /tmp/luci-*cache* 2>/dev/null || true
+
+          exit 0
+          UCIDEFAULT
+
+          chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home"
+          chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/"* 2>/dev/null || true
+          chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/init.d/"* 2>/dev/null || true
+
+          echo "==== Custom files copied / generated ===="
+          find "$GITHUB_WORKSPACE/wrt/files" -maxdepth 8 -type f | sort | grep -E 'm2more|m2-aurora|uci-defaults|luci-static' || true
+
+          echo "==== Check M2 Aurora important files ===="
           ls -l "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/controller/admin/m2more.lua" 2>/dev/null || true
           ls -l "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/view/m2more/aurora.htm" 2>/dev/null || true
           ls -l "$GITHUB_WORKSPACE/wrt/files/www/luci-static/m2more/" 2>/dev/null || true
@@ -207,12 +280,12 @@ jobs:
           "$GITHUB_WORKSPACE/Scripts/Settings.sh"
 
           echo "==== Ensure LuCI Aurora dashboard requirements ===="
-          cat >> .config <<'EOF'
-          CONFIG_PACKAGE_luci=y
-          CONFIG_PACKAGE_luci-compat=y
-          CONFIG_PACKAGE_luci-i18n-base-zh-cn=y
-          CONFIG_PACKAGE_luci-theme-aurora=y
-          EOF
+          {
+            echo "CONFIG_PACKAGE_luci=y"
+            echo "CONFIG_PACKAGE_luci-compat=y"
+            echo "CONFIG_PACKAGE_luci-i18n-base-zh-cn=y"
+            echo "CONFIG_PACKAGE_luci-theme-aurora=y"
+          } >> .config
 
           make defconfig -j$(nproc)
           make clean -j$(nproc)
@@ -222,7 +295,7 @@ jobs:
           echo "==== Verify wrt/files before build ===="
           find ./wrt/files -maxdepth 8 -type f | sort | grep -E 'm2more|m2-aurora|uci-defaults|luci-static' || true
 
-          echo "==== Verify config ===="
+          echo "==== Verify LuCI config ===="
           cd ./wrt/
           grep -E 'CONFIG_PACKAGE_luci=|CONFIG_PACKAGE_luci-compat=|CONFIG_PACKAGE_luci-i18n-base-zh-cn=|CONFIG_PACKAGE_luci-theme-aurora=' .config || true
 
