@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (C) 2026
+# 云编译公用核心
 
-#云编译公用核心
 name: WRT-CORE
 
 on:
@@ -44,25 +44,30 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+  actions: write
+
 env:
-  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  WRT_CONFIG: ${{inputs.WRT_CONFIG}}
-  WRT_THEME: ${{inputs.WRT_THEME}}
-  WRT_NAME: ${{inputs.WRT_NAME}}
-  WRT_SSID: ${{inputs.WRT_SSID}}
-  WRT_WORD: ${{inputs.WRT_WORD}}
-  WRT_IP: ${{inputs.WRT_IP}}
-  WRT_PW: ${{inputs.WRT_PW}}
-  WRT_REPO: ${{inputs.WRT_REPO}}
-  WRT_BRANCH: ${{inputs.WRT_BRANCH}}
-  WRT_SOURCE: ${{inputs.WRT_SOURCE}}
-  WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
-  WRT_TEST: ${{inputs.WRT_TEST}}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  WRT_CONFIG: ${{ inputs.WRT_CONFIG }}
+  WRT_THEME: ${{ inputs.WRT_THEME }}
+  WRT_NAME: ${{ inputs.WRT_NAME }}
+  WRT_SSID: ${{ inputs.WRT_SSID }}
+  WRT_WORD: ${{ inputs.WRT_WORD }}
+  WRT_IP: ${{ inputs.WRT_IP }}
+  WRT_PW: ${{ inputs.WRT_PW }}
+  WRT_REPO: ${{ inputs.WRT_REPO }}
+  WRT_BRANCH: ${{ inputs.WRT_BRANCH }}
+  WRT_SOURCE: ${{ inputs.WRT_SOURCE }}
+  WRT_PACKAGE: ${{ inputs.WRT_PACKAGE }}
+  WRT_TEST: ${{ inputs.WRT_TEST }}
 
 jobs:
   core:
-    name: ${{inputs.WRT_SOURCE}}
+    name: ${{ inputs.WRT_SOURCE }}
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Projects
         uses: actions/checkout@main
@@ -71,20 +76,24 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo -E apt -yqq purge firefox
+          sudo -E apt -yqq purge firefox || true
           sudo -E apt -yqq update
           sudo -E apt -yqq full-upgrade
           sudo -E apt -yqq autoremove --purge
           sudo -E apt -yqq autoclean
           sudo -E apt -yqq clean
           sudo -E apt -yqq install dos2unix libfuse-dev
+
           sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+
           sudo -E systemctl daemon-reload
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
           sudo mkdir -p /mnt/build_wrt
           sudo chown $USER:$USER /mnt/build_wrt
-          sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
+
+          rm -rf "$GITHUB_WORKSPACE/wrt"
+          sudo ln -s /mnt/build_wrt "$GITHUB_WORKSPACE/wrt"
 
       - name: Initialization Values
         run: |
@@ -98,11 +107,12 @@ jobs:
 
       - name: Clone Code
         run: |
-          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
+          git clone --depth=1 --single-branch --branch "$WRT_BRANCH" "$WRT_REPO" ./wrt/
 
-          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+          cd ./wrt/
+          echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
 
-          # GitHub Action 移除国内下载源
+          # GitHub Action 移除国内下载源，减少下载异常
           PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
           if [ -f "$PROJECT_MIRRORS_FILE" ]; then
             sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
@@ -117,8 +127,9 @@ jobs:
         if: env.WRT_TEST != 'true'
         uses: actions/cache@main
         with:
-          key: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_HASH}}
-          restore-keys: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}
+          key: ${{ env.WRT_CONFIG }}-${{ env.WRT_INFO }}-${{ env.WRT_HASH }}
+          restore-keys: |
+            ${{ env.WRT_CONFIG }}-${{ env.WRT_INFO }}
           path: |
             ./wrt/.ccache
             ./wrt/staging_dir/host*
@@ -132,70 +143,106 @@ jobs:
               find "$DIR" -type f -exec touch {} +
             done
 
-            mkdir -p ./wrt/tmp && echo "1" > ./wrt/tmp/.build
-
+            mkdir -p ./wrt/tmp
+            echo "1" > ./wrt/tmp/.build
             echo "toolchain skiped done!"
           else
             echo "caches missed!"
           fi
 
-          if ${{steps.check-cache.outputs.cache-hit != 'true'}}; then
-            CACHE_LIST=$(gh cache list --key "$WRT_CONFIG-$WRT_INFO" | cut -f 1)
+          if [ "${{ steps.check-cache.outputs.cache-hit }}" != "true" ]; then
+            CACHE_LIST=$(gh cache list --key "$WRT_CONFIG-$WRT_INFO" | cut -f 1 || true)
             for CACHE_KEY in $CACHE_LIST; do
-              gh cache delete $CACHE_KEY
+              gh cache delete "$CACHE_KEY" || true
             done
-
             echo "caches cleanup done!"
           fi
+
+      - name: Copy Custom Files
+        run: |
+          echo "==== Copy custom files into OpenWrt rootfs overlay ===="
+
+          if [ -d "$GITHUB_WORKSPACE/files" ]; then
+            mkdir -p "$GITHUB_WORKSPACE/wrt/files"
+            cp -af "$GITHUB_WORKSPACE/files/." "$GITHUB_WORKSPACE/wrt/files/"
+
+            chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/"* 2>/dev/null || true
+            chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/init.d/"* 2>/dev/null || true
+
+            echo "==== Custom files copied ===="
+            find "$GITHUB_WORKSPACE/wrt/files" -maxdepth 8 -type f | sort | head -n 500
+          else
+            echo "No custom files directory found"
+          fi
+
+          echo "==== Check M2 Aurora files ===="
+          ls -l "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/controller/admin/m2more.lua" 2>/dev/null || true
+          ls -l "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/view/m2more/aurora.htm" 2>/dev/null || true
+          ls -l "$GITHUB_WORKSPACE/wrt/files/www/luci-static/m2more/" 2>/dev/null || true
+          ls -l "$GITHUB_WORKSPACE/wrt/files/usr/share/luci/menu.d/m2-aurora-home.json" 2>/dev/null || true
+          ls -l "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home" 2>/dev/null || true
 
       - name: Update Feeds
         run: |
           cd ./wrt/
-
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
       - name: Custom Packages
         run: |
           cd ./wrt/package/
-
-          $GITHUB_WORKSPACE/Scripts/Packages.sh
-          $GITHUB_WORKSPACE/Scripts/Handles.sh
+          "$GITHUB_WORKSPACE/Scripts/Packages.sh"
+          "$GITHUB_WORKSPACE/Scripts/Handles.sh"
 
       - name: Custom Settings
         run: |
           cd ./wrt/
 
           if [[ "${WRT_CONFIG,,}" == *"test"* ]]; then
-            cat $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt >> .config
+            cat "$GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt" >> .config
           else
-            cat $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
+            cat "$GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt" "$GITHUB_WORKSPACE/Config/GENERAL.txt" >> .config
           fi
 
-          $GITHUB_WORKSPACE/Scripts/Settings.sh
+          "$GITHUB_WORKSPACE/Scripts/Settings.sh"
 
-          make defconfig -j$(nproc) && make clean -j$(nproc)
+          echo "==== Ensure LuCI Aurora dashboard requirements ===="
+          cat >> .config <<'EOF'
+          CONFIG_PACKAGE_luci=y
+          CONFIG_PACKAGE_luci-compat=y
+          CONFIG_PACKAGE_luci-i18n-base-zh-cn=y
+          CONFIG_PACKAGE_luci-theme-aurora=y
+          EOF
+
+          make defconfig -j$(nproc)
+          make clean -j$(nproc)
+
+      - name: Verify Custom Files Before Build
+        run: |
+          echo "==== Verify wrt/files before build ===="
+          find ./wrt/files -maxdepth 8 -type f | sort | grep -E 'm2more|m2-aurora|uci-defaults|luci-static' || true
+
+          echo "==== Verify config ===="
+          cd ./wrt/
+          grep -E 'CONFIG_PACKAGE_luci=|CONFIG_PACKAGE_luci-compat=|CONFIG_PACKAGE_luci-i18n-base-zh-cn=|CONFIG_PACKAGE_luci-theme-aurora=' .config || true
 
       - name: Download Packages
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-
           make download -j$(nproc)
 
       - name: Compile Firmware
         if: env.WRT_TEST != 'true'
         run: |
           cd ./wrt/
-
           make -j$(nproc) || make -j1 V=s
 
       - name: Machine Information
         run: |
           cd ./wrt/
-
           echo "======================="
-          lscpu | grep -E "name|Core|Thread"
+          lscpu | grep -E "name|Core|Thread" || true
           echo "======================="
           df -h
           echo "======================="
@@ -204,52 +251,50 @@ jobs:
 
       - name: Package Firmware
         run: |
-          cd ./wrt/ && mkdir ./upload/
+          cd ./wrt/
+          mkdir -p ./upload/
 
           cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_BRANCH"-"$WRT_DATE".txt
 
-          if [[ $WRT_TEST != 'true' ]]; then
-            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
+          if [[ "$WRT_TEST" != 'true' ]]; then
+            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \; | head -n1)" >> $GITHUB_ENV
             echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
 
             find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
 
-            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
-              EXT=$(basename $FILE | cut -d '.' -f 2-)
-              NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
-              NEW_FILE="$WRT_INFO"-"$WRT_BRANCH"-"$NAME"-"$WRT_DATE"."$EXT"
-              mv -f $FILE ./upload/$NEW_FILE
+            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*"); do
+              EXT=$(basename "$FILE" | cut -d '.' -f 2-)
+              NAME=$(basename "$FILE" | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*" || true)
+
+              if [ -n "$NAME" ]; then
+                NEW_FILE="$WRT_INFO"-"$WRT_BRANCH"-"$NAME"-"$WRT_DATE"."$EXT"
+                mv -f "$FILE" ./upload/"$NEW_FILE"
+              fi
             done
 
-            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
-
+            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \; || true
             make clean -j$(nproc)
           fi
 
       - name: Release Firmware
         uses: softprops/action-gh-release@master
         with:
-          tag_name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          tag_name: ${{ env.WRT_CONFIG }}-${{ env.WRT_INFO }}-${{ env.WRT_BRANCH }}-${{ env.WRT_DATE }}
           files: ./wrt/upload/*.*
           body: |
             这是个平台固件包，内含多个设备！
             请注意选择你需要的设备固件！
             不要问，刷就完事了！
-
             全系带开源硬件加速，别问了！
 
-            源码：${{env.WRT_REPO}}
-            分支：${{env.WRT_BRANCH}}
-            提交：${{env.WRT_HASH}}
-
-            配置：${{env.WRT_CONFIG}}
-            平台：${{env.WRT_TARGET}}
-
-            登录地址：${{env.WRT_IP}}
-            登录密码：${{env.WRT_PW}}
-
-            WIFI名称：${{env.WRT_SSID}}
-            WIFI密码：${{env.WRT_WORD}}
-
-            内核版本：${{env.WRT_KVER}}
-            插件列表：${{env.WRT_LIST}}
+            源码：${{ env.WRT_REPO }}
+            分支：${{ env.WRT_BRANCH }}
+            提交：${{ env.WRT_HASH }}
+            配置：${{ env.WRT_CONFIG }}
+            平台：${{ env.WRT_TARGET }}
+            登录地址：${{ env.WRT_IP }}
+            登录密码：${{ env.WRT_PW }}
+            WIFI名称：${{ env.WRT_SSID }}
+            WIFI密码：${{ env.WRT_WORD }}
+            内核版本：${{ env.WRT_KVER }}
+            插件列表：${{ env.WRT_LIST }}
