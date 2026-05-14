@@ -1,0 +1,15 @@
+config command
+	option name '查看 zram 状态'
+	option command 'free -h && echo && swapon --show && echo && zramctl'
+
+config command
+	option name '重启 zram'
+	option command '/etc/init.d/zram_swap restart'
+
+config command
+	option name '停止 zram'
+	option command '/etc/init.d/zram_swap stop'
+
+config command
+	option name '启用 zram'
+	option command '/etc/init.d/zram_swap enable && /etc/init.d/zram_swap restart'
