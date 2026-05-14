@@ -1,22 +1,45 @@
 #!/bin/sh
 
-echo "==== 设置 M2 Aurora 为 LuCI 默认首页 ===="
+echo "==== Set M2 Aurora as LuCI default home ===="
 
-# 设置 Aurora 主题为默认主题
 uci -q set luci.main.mediaurlbase='/luci-static/aurora'
 uci -q commit luci
 
-# 把登录后的默认状态页从 overview 改成 m2aurora
 INDEX_LUA="/usr/lib/lua/luci/controller/admin/index.lua"
 
 if [ -f "$INDEX_LUA" ]; then
     sed -i 's/alias("admin", "status", "overview")/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
     sed -i "s/alias('admin', 'status', 'overview')/alias('admin', 'status', 'm2aurora')/g" "$INDEX_LUA"
-
     sed -i 's/firstchild()/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
 fi
 
-# 清理 LuCI 缓存
-rm -rf /tmp/luci-indexcache /tmp/luci-modulecache /tmp/luci-indexcache.* /tmp/luci-modulecache.* 2>/dev/null || true
+MENU_DIR="/usr/share/luci/menu.d"
+BASE_JSON="$MENU_DIR/luci-base.json"
+
+mkdir -p "$MENU_DIR"
+
+cat > "$MENU_DIR/m2-aurora-home.json" <<'JSON'
+{
+  "admin/status/m2aurora": {
+    "title": "M2 Aurora 首页",
+    "order": -100,
+    "action": {
+      "type": "template",
+      "path": "m2more/aurora"
+    },
+    "depends": {
+      "fs": {
+        "/usr/lib/lua/luci/view/m2more/aurora.htm": "file"
+      }
+    }
+  }
+}
+JSON
+
+if [ -f "$BASE_JSON" ]; then
+    sed -i 's#admin/status/overview#admin/status/m2aurora#g' "$BASE_JSON"
+fi
+
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache /tmp/luci-indexcache.* /tmp/luci-modulecache.* /tmp/luci-*cache* 2>/dev/null || true
 
 exit 0
