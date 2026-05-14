@@ -179,79 +179,132 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/wrt/files/usr/share/luci/menu.d"
 
           cat > "$GITHUB_WORKSPACE/wrt/files/usr/share/luci/menu.d/m2-aurora-home.json" <<'MENUJSON'
-          {
-            "admin/status/m2aurora": {
-              "title": "M2 Aurora 首页",
-              "order": -100,
-              "action": {
-                "type": "template",
-                "path": "m2more/aurora"
-              },
-              "depends": {
-                "fs": {
-                  "/usr/lib/lua/luci/view/m2more/aurora.htm": "file"
-                }
-              }
-            }
-          }
-          MENUJSON
+{
+  "admin/status/m2aurora": {
+    "title": "首页",
+    "order": -100,
+    "action": {
+      "type": "template",
+      "path": "m2more/aurora"
+    },
+    "depends": {
+      "fs": {
+        "/usr/lib/lua/luci/view/m2more/aurora.htm": "file"
+      }
+    }
+  },
+  "admin/status/overview": {
+    "title": "概览",
+    "order": 100,
+    "action": {
+      "type": "template",
+      "path": "m2more/redirect_to_m2aurora"
+    },
+    "depends": {
+      "fs": {
+        "/usr/lib/lua/luci/view/m2more/redirect_to_m2aurora.htm": "file"
+      }
+    }
+  }
+}
+MENUJSON
 
-          sed -i 's/^          //' "$GITHUB_WORKSPACE/wrt/files/usr/share/luci/menu.d/m2-aurora-home.json"
+          echo "==== Create redirect page ===="
+          mkdir -p "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/view/m2more"
+
+          cat > "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/view/m2more/redirect_to_m2aurora.htm" <<'REDIRECT'
+<%+header%>
+<script>
+(function () {
+    var target = "<%=url('admin/status/m2aurora')%>";
+    window.location.replace(target);
+})();
+</script>
+<div style="padding:30px;font-size:16px;">正在进入首页...</div>
+<%+footer%>
+REDIRECT
 
           echo "==== Create M2 Aurora default home script ===="
           mkdir -p "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults"
 
           cat > "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home" <<'UCIDEFAULT'
-          #!/bin/sh
+#!/bin/sh
 
-          echo "==== Set M2 Aurora as LuCI default home ===="
+echo "==== Set M2 Aurora as LuCI default home ===="
 
-          uci -q set luci.main.mediaurlbase='/luci-static/aurora'
-          uci -q commit luci
+uci -q set luci.main.mediaurlbase='/luci-static/aurora'
+uci -q commit luci
 
-          INDEX_LUA="/usr/lib/lua/luci/controller/admin/index.lua"
+CTRL_FILE="/usr/lib/lua/luci/controller/admin/m2more.lua"
+if [ -f "$CTRL_FILE" ]; then
+    sed -i 's/M2 Aurora 首页/首页/g' "$CTRL_FILE"
+fi
 
-          if [ -f "$INDEX_LUA" ]; then
-              sed -i 's/alias("admin", "status", "overview")/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
-              sed -i "s/alias('admin', 'status', 'overview')/alias('admin', 'status', 'm2aurora')/g" "$INDEX_LUA"
-              sed -i 's/firstchild()/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
-          fi
+MENU_DIR="/usr/share/luci/menu.d"
+BASE_JSON="$MENU_DIR/luci-base.json"
 
-          MENU_DIR="/usr/share/luci/menu.d"
-          BASE_JSON="$MENU_DIR/luci-base.json"
+mkdir -p "$MENU_DIR"
 
-          mkdir -p "$MENU_DIR"
+cat > "$MENU_DIR/m2-aurora-home.json" <<'MENUJSON'
+{
+  "admin/status/m2aurora": {
+    "title": "首页",
+    "order": -100,
+    "action": {
+      "type": "template",
+      "path": "m2more/aurora"
+    },
+    "depends": {
+      "fs": {
+        "/usr/lib/lua/luci/view/m2more/aurora.htm": "file"
+      }
+    }
+  },
+  "admin/status/overview": {
+    "title": "概览",
+    "order": 100,
+    "action": {
+      "type": "template",
+      "path": "m2more/redirect_to_m2aurora"
+    },
+    "depends": {
+      "fs": {
+        "/usr/lib/lua/luci/view/m2more/redirect_to_m2aurora.htm": "file"
+      }
+    }
+  }
+}
+MENUJSON
 
-          cat > "$MENU_DIR/m2-aurora-home.json" <<'INNERMENUJSON'
-          {
-            "admin/status/m2aurora": {
-              "title": "M2 Aurora 首页",
-              "order": -100,
-              "action": {
-                "type": "template",
-                "path": "m2more/aurora"
-              },
-              "depends": {
-                "fs": {
-                  "/usr/lib/lua/luci/view/m2more/aurora.htm": "file"
-                }
-              }
-            }
-          }
-          INNERMENUJSON
+mkdir -p /usr/lib/lua/luci/view/m2more
 
-          sed -i 's/^          //' "$MENU_DIR/m2-aurora-home.json"
+cat > /usr/lib/lua/luci/view/m2more/redirect_to_m2aurora.htm <<'REDIRECT'
+<%+header%>
+<script>
+(function () {
+    var target = "<%=url('admin/status/m2aurora')%>";
+    window.location.replace(target);
+})();
+</script>
+<div style="padding:30px;font-size:16px;">正在进入首页...</div>
+<%+footer%>
+REDIRECT
 
-          if [ -f "$BASE_JSON" ]; then
-              sed -i 's#admin/status/overview#admin/status/m2aurora#g' "$BASE_JSON"
-          fi
+if [ -f "$BASE_JSON" ]; then
+    sed -i 's#admin/status/overview#admin/status/m2aurora#g' "$BASE_JSON"
+fi
 
-          rm -rf /tmp/luci-indexcache /tmp/luci-modulecache /tmp/luci-indexcache.* /tmp/luci-modulecache.* /tmp/luci-*cache* 2>/dev/null || true
+INDEX_LUA="/usr/lib/lua/luci/controller/admin/index.lua"
+if [ -f "$INDEX_LUA" ]; then
+    sed -i 's/alias("admin", "status", "overview")/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
+    sed -i "s/alias('admin', 'status', 'overview')/alias('admin', 'status', 'm2aurora')/g" "$INDEX_LUA"
+    sed -i 's/firstchild()/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
+fi
 
-          exit 0
-          UCIDEFAULT
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache /tmp/luci-indexcache.* /tmp/luci-modulecache.* /tmp/luci-*cache* 2>/dev/null || true
 
-          sed -i 's/^          //' "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home"
+exit 0
+UCIDEFAULT
 
           chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home"
           chmod +x "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/"* 2>/dev/null || true
@@ -263,6 +316,7 @@ jobs:
           echo "==== Check M2 Aurora important files ===="
           ls -l "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/controller/admin/m2more.lua" 2>/dev/null || true
           ls -l "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/view/m2more/aurora.htm" 2>/dev/null || true
+          ls -l "$GITHUB_WORKSPACE/wrt/files/usr/lib/lua/luci/view/m2more/redirect_to_m2aurora.htm" 2>/dev/null || true
           ls -l "$GITHUB_WORKSPACE/wrt/files/www/luci-static/m2more/" 2>/dev/null || true
           ls -l "$GITHUB_WORKSPACE/wrt/files/usr/share/luci/menu.d/m2-aurora-home.json" 2>/dev/null || true
           ls -l "$GITHUB_WORKSPACE/wrt/files/etc/uci-defaults/99-m2-aurora-default-home" 2>/dev/null || true
