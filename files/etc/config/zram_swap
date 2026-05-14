@@ -1,0 +1,5 @@
+config zram_swap 'config'
+	option enabled '1'
+	option size_mb '128'
+	option comp_algo 'lzo'
+	option priority '100'
