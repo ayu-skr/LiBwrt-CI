@@ -1,0 +1,22 @@
+#!/bin/sh
+
+echo "==== 设置 M2 Aurora 为 LuCI 默认首页 ===="
+
+# 设置 Aurora 主题为默认主题
+uci -q set luci.main.mediaurlbase='/luci-static/aurora'
+uci -q commit luci
+
+# 把登录后的默认状态页从 overview 改成 m2aurora
+INDEX_LUA="/usr/lib/lua/luci/controller/admin/index.lua"
+
+if [ -f "$INDEX_LUA" ]; then
+    sed -i 's/alias("admin", "status", "overview")/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
+    sed -i "s/alias('admin', 'status', 'overview')/alias('admin', 'status', 'm2aurora')/g" "$INDEX_LUA"
+
+    sed -i 's/firstchild()/alias("admin", "status", "m2aurora")/g' "$INDEX_LUA"
+fi
+
+# 清理 LuCI 缓存
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache /tmp/luci-indexcache.* /tmp/luci-modulecache.* 2>/dev/null || true
+
+exit 0
