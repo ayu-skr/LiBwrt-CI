@@ -1,0 +1,15 @@
+#!/bin/sh
+
+uci -q batch <<'EOF'
+set zram_swap.config=zram_swap
+set zram_swap.config.enabled='1'
+set zram_swap.config.size_mb='128'
+set zram_swap.config.comp_algo='lzo'
+set zram_swap.config.priority='100'
+commit zram_swap
+EOF
+
+/etc/init.d/zram_swap enable 2>/dev/null
+/etc/init.d/zram_swap restart 2>/dev/null
+
+exit 0
